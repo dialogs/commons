@@ -6,7 +6,8 @@ import im.dlg.DialogHouseRules._
 name := "dialog-commons"
 
 lazy val defaultSettings = defaultDialogSettings ++ mitLicense ++ Seq(
-  resolvers += Resolver.sonatypeRepo("public")
+  resolvers += Resolver.sonatypeRepo("public"),
+  publishMavenStyle := true
 )
 
 defaultSettings
