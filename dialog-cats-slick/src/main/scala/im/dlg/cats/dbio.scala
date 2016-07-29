@@ -1,13 +1,12 @@
 package im.dlg.cats
 
-import cats._
 import cats.data.Xor
 import cats.data.Xor._
+import cats.{CoflatMap, Eval, Group, MonadError, Monoid, Semigroup}
 import cats.syntax.all._
 import slick.dbio.{DBIO, FailureAction, SuccessAction}
 
-import scala.concurrent.{Future, ExecutionContext}
-import scala.reflect.ClassTag
+import scala.concurrent.{ExecutionContext, Future}
 
 object dbio extends DBIOInstances
 
