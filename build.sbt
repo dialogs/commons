@@ -29,10 +29,5 @@ releaseProcess := Seq[ReleaseStep](
   ReleaseStep(action = Command.process("publish", _)),
   setNextVersion,
   commitNextVersion,
-  releaseStepTask(publish in dialogConcurrent),
-  releaseStepTask(publish in dialogUtil),
-  releaseStepTask(publish in dialogCatsSlick),
-  releaseStepTask(publish in dialogStorage),
-  releaseStepTask(publish in dialogStorageSlick),
   pushChanges
 )
