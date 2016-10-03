@@ -12,8 +12,8 @@ lazy val defaultSettings = defaultDialogSettings ++ mitLicense ++ Seq(
 
 defaultSettings
 
-lazy val dialogConcurrent = project in file("dialog-concurrent") settings defaultSettings
 lazy val dialogUtil = project in file("dialog-util") settings defaultSettings
+lazy val dialogConcurrent = project in file("dialog-concurrent") settings defaultSettings dependsOn dialogUtil
 lazy val dialogCatsSlick = project in file("dialog-cats-slick") settings defaultSettings
 lazy val dialogStorage = project in file("dialog-storage") settings defaultSettings
 lazy val dialogStorageSlick = project in file("dialog-storage-slick") dependsOn dialogStorage settings defaultSettings
