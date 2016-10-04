@@ -1,6 +1,6 @@
 package im.dlg.concurrent
 
-import akka.actor.Scheduler
+import akka.actor.ActorSystem
 
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.concurrent.duration._
@@ -20,14 +20,15 @@ object FutureRetries {
     n ⇒ Array(maxBackoff, expBackoffInternal(n, dev)).min
   }
 
-  def withRetries[A](maxAttempts: Int, delay: Delay = immediateRetryDelay, decider: Decider = alwaysRetryDecider)(f: ⇒ A)(implicit scheduler: Scheduler, ec: ExecutionContext): Future[A] = {
+  def withRetries[A](maxAttempts: Int, delay: Delay = immediateRetryDelay, decider: Decider = alwaysRetryDecider)(f: ⇒ A)(implicit system: ActorSystem, ec: ExecutionContext): Future[A] = {
     require(maxAttempts >= 0, "Maximum attemps count should be non-negative")
+    val deciderLifted = decider.lift
     val p = Promise[A]()
 
     def inner(n: Int): Unit = Future(f) onComplete {
-      case Failure(err) if n < maxAttempts && decider(err) ⇒
+      case Failure(err) if n < maxAttempts && deciderLifted(err).exists(_) ⇒
         val nextN = n + 1
-        scheduler.scheduleOnce(delay(nextN)) {
+        system.scheduler.scheduleOnce(delay(nextN)) {
           inner(nextN)
         }
       case x ⇒ p complete x
