@@ -26,7 +26,7 @@ object FutureRetries {
     val p = Promise[A]()
 
     def inner(n: Int): Unit = Future(f) onComplete {
-      case Failure(err) if n < maxAttempts && deciderLifted(err).exists(_) ⇒
+      case Failure(err) if n < maxAttempts && deciderLifted(err).exists(identity) ⇒
         val nextN = n + 1
         system.scheduler.scheduleOnce(delay(nextN)) {
           inner(nextN)
