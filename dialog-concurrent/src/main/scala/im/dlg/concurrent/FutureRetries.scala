@@ -2,7 +2,7 @@ package im.dlg.concurrent
 
 import akka.actor.ActorSystem
 
-import scala.concurrent.{ExecutionContext, Future, Promise}
+import scala.concurrent.{Future, Promise}
 import scala.concurrent.duration._
 import scala.math.pow
 import scala.util.Random.nextInt
@@ -20,12 +20,13 @@ object FutureRetries {
     n ⇒ Array(maxBackoff, expBackoffInternal(n, dev)).min
   }
 
-  def withRetries[A](maxAttempts: Int, delay: Delay = immediateRetryDelay, decider: Decider = alwaysRetryDecider)(f: ⇒ A)(implicit system: ActorSystem, ec: ExecutionContext): Future[A] = {
+  def withRetries[A](maxAttempts: Int, delay: Delay = immediateRetryDelay, decider: Decider = alwaysRetryDecider)(f: ⇒ Future[A])(implicit system: ActorSystem): Future[A] = {
+    import system.dispatcher
     require(maxAttempts >= 0, "Maximum attemps count should be non-negative")
     val deciderLifted = decider.lift
     val p = Promise[A]()
 
-    def inner(n: Int): Unit = Future(f) onComplete {
+    def inner(n: Int): Unit = f onComplete {
       case Failure(err) if n < maxAttempts && deciderLifted(err).exists(identity) ⇒
         val nextN = n + 1
         system.scheduler.scheduleOnce(delay(nextN)) {
