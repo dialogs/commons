@@ -19,7 +19,7 @@ object Retries {
     def inner(n: Int): A =
       Try(f) match {
         case Success(res) ⇒ res
-        case Failure(err) if n > 0 && deciderLifted(err).exists(_) ⇒
+        case Failure(err) if n > 0 && deciderLifted(err).exists(identity) ⇒
           val currentDelay = delay(n).toMillis
           if (currentDelay > 0) Thread.sleep(delay(n).toMillis)
           inner(n - 1)
