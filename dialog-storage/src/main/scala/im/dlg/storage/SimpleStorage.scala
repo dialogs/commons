@@ -1,12 +1,15 @@
 package im.dlg.storage
 
-import scala.concurrent.Future
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.FiniteDuration
 
 trait Connector {
   def run[R](action: api.Action[R]): Future[R]
 
-  def runSync[R](action: api.Action[R])(implicit timeout: FiniteDuration): R
+  def createTableIfNotExists(name: String, createReverseIndex: Boolean): Unit
+
+  final def runSync[R](action: api.Action[R])(implicit timeout: FiniteDuration): R =
+    Await.result(run(action), timeout)
 }
 
 class SimpleStorage(val name: String) {
@@ -21,6 +24,8 @@ class SimpleStorage(val name: String) {
   final def delete(key: String) = DeleteAction(name, key)
 
   final def getKeys = GetKeysAction(name)
+
+  final def getKeysForValue(value: Array[Byte]) = GetKeysForValue(name, value)
 }
 
 object api {
@@ -37,5 +42,7 @@ object api {
   final case class DeleteAction(name: String, key: String) extends Action[Int]
 
   final case class GetKeysAction(name: String) extends Action[Seq[String]]
+
+  final case class GetKeysForValue(name: String, value: Array[Byte]) extends Action[Vector[String]]
 
 }
