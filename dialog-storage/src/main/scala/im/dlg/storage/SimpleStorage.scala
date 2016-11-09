@@ -21,6 +21,8 @@ class SimpleStorage(val name: String) {
   final def delete(key: String) = DeleteAction(name, key)
 
   final def getKeys = GetKeysAction(name)
+
+  final def getKeysForValue(value: Array[Byte]) = GetKeysForValue(name, value)
 }
 
 object api {
@@ -37,5 +39,7 @@ object api {
   final case class DeleteAction(name: String, key: String) extends Action[Int]
 
   final case class GetKeysAction(name: String) extends Action[Seq[String]]
+
+  final case class GetKeysForValue(name: String, value: Array[Byte]) extends Action[Vector[String]]
 
 }

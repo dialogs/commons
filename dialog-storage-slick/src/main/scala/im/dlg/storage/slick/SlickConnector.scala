@@ -31,6 +31,7 @@ class SlickConnector(db: Database)(implicit ec: ExecutionContext) extends Connec
         case UpsertAction(name, key, value) ⇒ upsert(name, key, value)
         case DeleteAction(name, key)        ⇒ delete(name, key)
         case GetKeysAction(name)            ⇒ getKeys(name)
+        case GetKeysForValue(name, value)   ⇒ getKeysForValue(name, value)
       }).asInstanceOf[Future[R]]
     } yield result
   }
@@ -74,4 +75,7 @@ class SlickConnector(db: Database)(implicit ec: ExecutionContext) extends Connec
 
   private def getKeys(name: String) =
     db.run(sql"""SELECT key FROM #${tableName(name)}""".as[String])
+
+  private def getKeysForValue(name: String, value: Array[Byte]) =
+    db.run(sql"""SELECT key FROM #${tableName(name)} WHERE value = $value""".as[String])
 }
