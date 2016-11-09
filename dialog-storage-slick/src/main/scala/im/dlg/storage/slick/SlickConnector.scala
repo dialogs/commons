@@ -1,13 +1,11 @@
 package im.dlg.storage.slick
 
 import com.github.tminglei.slickpg._
-import im.dlg.storage.Connector
 import im.dlg.storage.api._
 import im.dlg.storage.Connector
 import im.dlg.storage.api.Action
 import org.slf4j.LoggerFactory
 
-import scala.collection.mutable
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 
@@ -15,37 +13,30 @@ private object Driver extends ExPostgresDriver
 import Driver.api._
 
 class SlickConnector(db: Database)(implicit ec: ExecutionContext) extends Connector {
-
   private val log = LoggerFactory.getLogger(this.getClass)
-  private val tables = mutable.Set.empty[String]
 
-  override def runSync[R](action: Action[R])(implicit timeout: FiniteDuration): R =
-    Await.result(run(action), timeout)
+  override def run[R](action: Action[R]): Future[R] = for {
+    result ← (action match {
+      case GetAction(name, key)           ⇒ get(name, key)
+      case GetByPrefixAction(name, key)   ⇒ getByPrefix(name, key)
+      case UpsertAction(name, key, value) ⇒ upsert(name, key, value)
+      case DeleteAction(name, key)        ⇒ delete(name, key)
+      case GetKeysAction(name)            ⇒ getKeys(name)
+      case GetKeysForValue(name, value)   ⇒ getKeysForValue(name, value)
+    }).asInstanceOf[Future[R]]
+  } yield result
 
-  override def run[R](action: Action[R]): Future[R] = {
-    createTableIfNotExists(action.name)
-    for {
-      result ← (action match {
-        case GetAction(name, key)           ⇒ get(name, key)
-        case GetByPrefixAction(name, key)   ⇒ getByPrefix(name, key)
-        case UpsertAction(name, key, value) ⇒ upsert(name, key, value)
-        case DeleteAction(name, key)        ⇒ delete(name, key)
-        case GetKeysAction(name)            ⇒ getKeys(name)
-        case GetKeysForValue(name, value)   ⇒ getKeysForValue(name, value)
-      }).asInstanceOf[Future[R]]
-    } yield result
-  }
-
-  private def createTableIfNotExists(name: String): Unit = synchronized {
-    if (!tables.contains(name)) {
-      val tName = tableName(name)
-      Await.result(
-        db.run(sqlu"""CREATE TABLE IF NOT EXISTS #$tName (key TEXT, value BYTEA, PRIMARY KEY (key))""") map (_ ⇒ ()),
-        10.seconds
-      )
-      //      log.debug("Created table: {}", tName)
-      tables += name
-    }
+  override def createTableIfNotExists(name: String, createReverseIndex: Boolean = false): Unit = {
+    val tName = tableName(name)
+    Await.result(
+      db.run(for {
+        _ ← sqlu"CREATE TABLE IF NOT EXISTS #$tName (key TEXT, value BYTEA, PRIMARY KEY (key))"
+        _ ← if (createReverseIndex)
+          sqlu"CREATE INDEX IF NOT EXISTS #${tName}_reverse_index ON #$tName (value)"
+        else DBIO.successful(())
+      } yield ()),
+      10.seconds
+    )
   }
 
   private def tableName(name: String) = s"kv_$name"

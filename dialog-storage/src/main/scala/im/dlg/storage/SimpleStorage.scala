@@ -1,12 +1,15 @@
 package im.dlg.storage
 
-import scala.concurrent.Future
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.FiniteDuration
 
 trait Connector {
   def run[R](action: api.Action[R]): Future[R]
 
-  def runSync[R](action: api.Action[R])(implicit timeout: FiniteDuration): R
+  def createTableIfNotExists(name: String, createReverseIndex: Boolean): Unit
+
+  final def runSync[R](action: api.Action[R])(implicit timeout: FiniteDuration): R =
+    Await.result(run(action), timeout)
 }
 
 class SimpleStorage(val name: String) {
