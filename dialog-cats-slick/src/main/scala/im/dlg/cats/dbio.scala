@@ -1,8 +1,6 @@
 package im.dlg.cats
 
-import cats.data.Xor
-import cats.data.Xor._
-import cats.{CoflatMap, Eval, Group, MonadError, Monoid, Semigroup}
+import cats.{CoflatMap, Group, MonadError, Monoid, Semigroup}
 import cats.syntax.all._
 import slick.dbio.{DBIO, FailureAction, SuccessAction}
 
@@ -11,7 +9,6 @@ import scala.concurrent.{ExecutionContext, Future}
 object dbio extends DBIOInstances
 
 trait DBIOInstances extends DBIOInstances1 {
-
   implicit def DBIOInstance(implicit ec: ExecutionContext): MonadError[DBIO, Throwable] with CoflatMap[DBIO] =
     new DBIOCoflatMap with MonadError[DBIO, Throwable] {
       def pure[A](x: A): DBIO[A] = DBIO.successful(x)
@@ -31,12 +28,6 @@ trait DBIOInstances extends DBIOInstances1 {
           case FailureAction(t)   ⇒ f(t)
         }
 
-      override def attempt[A](fa: DBIO[A]): DBIO[Throwable Xor A] =
-        fa map {
-          case SuccessAction(res) ⇒ right(res.asInstanceOf[A])
-          case FailureAction(t)   ⇒ left(t)
-        }
-
       override def recover[A](fa: DBIO[A])(pf: PartialFunction[Throwable, A]): DBIO[A] =
         fa map {
           case succ: SuccessAction[_] ⇒ succ.asInstanceOf[A]
@@ -51,7 +42,10 @@ trait DBIOInstances extends DBIOInstances1 {
 
       override def map[A, B](fa: DBIO[A])(f: A ⇒ B): DBIO[B] = fa.map(f)
 
-      override def tailRecM[A, B](a: A)(f: (A) ⇒ DBIO[Either[A, B]]): DBIO[B] = defaultTailRecM(a)(f)
+      override def tailRecM[A, B](a: A)(f: (A) ⇒ DBIO[Either[A, B]]): DBIO[B] = f(a) flatMap {
+        case Left(b)  ⇒ tailRecM(b)(f)
+        case Right(b) ⇒ DBIO.successful(b)
+      }
     }
 
   implicit def DBIOGroup[A: Group](implicit ec: ExecutionContext): Group[DBIO[A]] =

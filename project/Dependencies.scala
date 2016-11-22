@@ -6,7 +6,7 @@ object V {
   val Scalatest = "2.2.4"
   val Slick = "3.1.1"
   val SlickPg = "0.13.0"
-  val Cats = "0.7.2"
+  val Cats = "0.8.1"
 }
 
 object Dependencies {
