@@ -5,6 +5,8 @@ import im.dlg.DialogHouseRules._
 
 name := "dialog-commons"
 
+scalaVersion := "2.12.4"
+
 lazy val defaultSettings = defaultDialogSettings ++ mitLicense ++ Seq(
   resolvers += Resolver.sonatypeRepo("public"),
   publishMavenStyle := true
@@ -17,6 +19,8 @@ lazy val dialogConcurrent = project in file("dialog-concurrent") settings defaul
 lazy val dialogCatsSlick = project in file("dialog-cats-slick") settings defaultSettings
 lazy val dialogStorage = project in file("dialog-storage") settings defaultSettings
 lazy val dialogStorageSlick = project in file("dialog-storage-slick") dependsOn dialogStorage settings defaultSettings
+
+lazy val root = project in file(".") aggregate (dialogUtil, dialogConcurrent, dialogCatsSlick, dialogStorage, dialogStorageSlick)
 
 releaseProcess := Seq[ReleaseStep](
   checkSnapshotDependencies,
