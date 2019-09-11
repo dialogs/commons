@@ -4,17 +4,18 @@ import com.github.tminglei.slickpg._
 import im.dlg.storage.api._
 import im.dlg.storage.Connector
 import im.dlg.storage.api.Action
-import org.slf4j.LoggerFactory
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 
-private object Driver extends ExPostgresDriver
+private object Driver extends ExPostgresProfile with PgArraySupport {
+  override val api = PgAPI
+
+  object PgAPI extends API with ByteaPlainImplicits
+}
 import Driver.api._
 
 class SlickConnector(db: Database)(implicit ec: ExecutionContext) extends Connector {
-  private val log = LoggerFactory.getLogger(this.getClass)
-
   override def run[R](action: Action[R]): Future[R] = for {
     result ← (action match {
       case GetAction(name, key)           ⇒ get(name, key)
