@@ -2,11 +2,11 @@ import sbt._
 import Keys._
 
 object V {
-  val Akka = "2.4.4"
-  val Scalatest = "2.2.4"
-  val Slick = "3.1.1"
-  val SlickPg = "0.13.0"
-  val Cats = "0.8.1"
+  val Akka = "2.5.25"
+  val Scalatest = "3.0.8"
+  val Slick = "3.3.2"
+  val SlickPg = "0.18.0"
+  val Cats = "2.0.0"
 }
 
 object Dependencies {
@@ -18,5 +18,5 @@ object Dependencies {
 
   val slickPg = "com.github.tminglei" %% "slick-pg" % V.SlickPg % "provided"
 
-  val cats = "org.typelevel" %% "cats" % V.Cats % "provided"
+  val cats = "org.typelevel" %% "cats-core" % V.Cats % "provided"
 }

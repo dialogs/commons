@@ -8,7 +8,7 @@ object Retries {
   type Decider = PartialFunction[Throwable, Boolean]
   type Delay = Function[Int, FiniteDuration]
 
-  val alwaysRetryDecider: Decider = PartialFunction(_ ⇒ true)
+  val alwaysRetryDecider: Decider = { case _ ⇒ true }
   val immediateRetryDelay: Delay = _ ⇒ 0.seconds
 
   def withRetries[A](maxAttempts: Int, delay: Delay = immediateRetryDelay, decider: Decider = alwaysRetryDecider)(f: ⇒ A): A = {
