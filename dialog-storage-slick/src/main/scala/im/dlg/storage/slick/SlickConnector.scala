@@ -8,7 +8,9 @@ import im.dlg.storage.api.Action
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 
-private object Driver extends ExPostgresProfile with PgArraySupport {
+private object Driver extends Driver
+
+private trait Driver extends ExPostgresProfile with PgArraySupport {
   override val api = PgAPI
 
   object PgAPI extends API with ByteaPlainImplicits
