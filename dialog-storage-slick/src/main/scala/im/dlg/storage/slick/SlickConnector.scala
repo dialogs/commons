@@ -20,17 +20,17 @@ import Driver.api._
 class SlickConnector(db: Database)(implicit ec: ExecutionContext) extends Connector {
   override def run[R](action: Action[R]): Future[R] = for {
     result ← (action match {
-      case GetAction(name, key)           ⇒ get(name, key)
-      case GetByPrefixAction(name, key)   ⇒ getByPrefix(name, key)
-      case UpsertAction(name, key, value) ⇒ upsert(name, key, value)
-      case DeleteAction(name, key)        ⇒ delete(name, key)
-      case GetKeysAction(name)            ⇒ getKeys(name)
-      case GetKeysForValue(name, value)   ⇒ getKeysForValue(name, value)
+      case GetAction(schema, name, key)           ⇒ get(schema, name, key)
+      case GetByPrefixAction(schema, name, key)   ⇒ getByPrefix(schema, name, key)
+      case UpsertAction(schema, name, key, value) ⇒ upsert(schema, name, key, value)
+      case DeleteAction(schema, name, key)        ⇒ delete(schema, name, key)
+      case GetKeysAction(schema, name)            ⇒ getKeys(schema, name)
+      case GetKeysForValue(schema, name, value)   ⇒ getKeysForValue(schema, name, value)
     }).asInstanceOf[Future[R]]
   } yield result
 
-  override def createTableIfNotExists(name: String, createReverseIndex: Boolean = false): Unit = {
-    val tName = tableName(name)
+  override def createTableIfNotExists(schema: Option[String], name: String, createReverseIndex: Boolean = false): Unit = {
+    val tName = tableName(schema, name)
     Await.result(
       db.run(for {
         _ ← sqlu"CREATE TABLE IF NOT EXISTS #$tName (key TEXT, value BYTEA, PRIMARY KEY (key))"
@@ -42,16 +42,17 @@ class SlickConnector(db: Database)(implicit ec: ExecutionContext) extends Connec
     )
   }
 
-  private def tableName(name: String) = s"kv_$name"
+  private def tableName(schema: Option[String], name: String) =
+    schema.map(s => s"$s.kv_$name").getOrElse(s"kv_$name")
 
-  private def get(name: String, key: String): Future[Option[Array[Byte]]] =
-    db.run(sql"""SELECT value FROM #${tableName(name)} WHERE key = $key""".as[Array[Byte]].headOption)
+  private def get(schema: Option[String], name: String, key: String): Future[Option[Array[Byte]]] =
+    db.run(sql"""SELECT value FROM #${tableName(schema, name)} WHERE key = $key""".as[Array[Byte]].headOption)
 
-  private def getByPrefix(name: String, keyPrefix: String): Future[Vector[(String, Array[Byte])]] =
-    db.run(sql"""SELECT key, value FROM #${tableName(name)} WHERE key like '#$keyPrefix%'""".as[(String, Array[Byte])])
+  private def getByPrefix(schema: Option[String], name: String, keyPrefix: String): Future[Vector[(String, Array[Byte])]] =
+    db.run(sql"""SELECT key, value FROM #${tableName(schema, name)} WHERE key like '#$keyPrefix%'""".as[(String, Array[Byte])])
 
-  private def upsert(name: String, key: String, value: Array[Byte]): Future[Int] = {
-    val tName = tableName(name)
+  private def upsert(schema: Option[String], name: String, key: String, value: Array[Byte]): Future[Int] = {
+    val tName = tableName(schema, name)
     val action: DBIO[Int] = for {
       count ← sql"SELECT COUNT(*) FROM #$tName WHERE KEY = $key".as[Int]
       exists = count.headOption.exists(_ > 0)
@@ -64,12 +65,12 @@ class SlickConnector(db: Database)(implicit ec: ExecutionContext) extends Connec
     db.run(action.transactionally)
   }
 
-  private def delete(name: String, key: String) =
-    db.run(sqlu"""DELETE FROM #${tableName(name)} WHERE key = $key""")
+  private def delete(schema: Option[String], name: String, key: String) =
+    db.run(sqlu"""DELETE FROM #${tableName(schema, name)} WHERE key = $key""")
 
-  private def getKeys(name: String) =
-    db.run(sql"""SELECT key FROM #${tableName(name)}""".as[String])
+  private def getKeys(schema: Option[String], name: String) =
+    db.run(sql"""SELECT key FROM #${tableName(schema, name)}""".as[String])
 
-  private def getKeysForValue(name: String, value: Array[Byte]) =
-    db.run(sql"""SELECT key FROM #${tableName(name)} WHERE value = $value""".as[String])
+  private def getKeysForValue(schema: Option[String], name: String, value: Array[Byte]) =
+    db.run(sql"""SELECT key FROM #${tableName(schema, name)} WHERE value = $value""".as[String])
 }
