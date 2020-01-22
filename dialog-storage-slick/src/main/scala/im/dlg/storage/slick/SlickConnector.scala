@@ -35,7 +35,7 @@ class SlickConnector(db: Database)(implicit ec: ExecutionContext) extends Connec
       db.run(for {
         _ ← sqlu"CREATE TABLE IF NOT EXISTS #$tName (key TEXT, value BYTEA, PRIMARY KEY (key))"
         _ ← if (createReverseIndex)
-          sqlu"CREATE INDEX IF NOT EXISTS #${tName}_reverse_index ON #$tName (value)"
+          sqlu"CREATE INDEX IF NOT EXISTS #${name}_reverse_index ON #$tName (value)"
         else DBIO.successful(())
       } yield ()),
       10.seconds
