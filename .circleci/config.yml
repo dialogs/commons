@@ -1,0 +1,64 @@
+# Java Gradle CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-java/ for more details
+#
+version: 2.1
+
+git_config: &git_config
+  name: configure git bot
+  command: |
+    git config user.name "$GITHUB_BOT_USERNAME"
+    git config user.email "$GITHUB_BOT_EMAIL"
+    git remote set-url origin https://${GITHUB_BOT_TOKEN}@github.com/dialogs/commons.git
+
+executors:
+  sbt-executor:
+    docker:
+      - image: circleci/openjdk:8-jdk
+    resource_class: large
+    environment:
+      SBT_OPTS: -Xmx6g
+      SCALA_VERSION: 2.13.1
+    working_directory: ~/code
+
+jobs:
+  sbt-build:
+    executor: sbt-executor
+    steps:
+      - checkout:
+          path: ~/code
+      - restore_cache:
+          key: v1-sbt-cache-{{ checksum "build.sbt" }}
+      - run: sbt compile
+      - save_cache:
+          key: v1-sbt-cache-{{ checksum "build.sbt" }}
+          paths: ['~/.sbt', '~/.ivy2/cache', '~/.m2']
+  sbt-publish:
+    executor: sbt-executor
+    steps:
+      - checkout:
+          path: ~/code
+      - run: sbt publish
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - sbt-build
+
+  publish:
+    jobs:
+      - sbt-build:
+          filters:
+            tags:
+              only: /^v.+$/
+            branches:
+              ignore: /.*/
+      - sbt-publish:
+          requires:
+            - sbt-build
+          filters:
+            tags:
+              only: /^v.+$/
+            branches:
+              ignore: /.*/

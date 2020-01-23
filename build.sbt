@@ -2,12 +2,12 @@ import sbt.Keys._
 
 name := "dialog-commons"
 
-scalaVersion := "2.13.0"
+scalaVersion := "2.12.10"
 
-crossScalaVersions := List("2.11.11", "2.12.8", "2.13.0")
+crossScalaVersions := List("2.11.11", "2.12.10", "2.13.1")
 
 lazy val defaultSettings = Seq(
-  licenses := Seq("MIT" -> url("https://opensource.org/licenses/MIT")),
+  licenses := Seq("Apache-2.0" -> url("https://github.com/dialogs/api-schema/blob/master/LICENSE")),
   resolvers += Resolver.sonatypeRepo("public"),
   publishMavenStyle := true
 )
@@ -18,4 +18,10 @@ lazy val dialogCatsSlick = project in file("dialog-cats-slick")
 lazy val dialogStorage = project in file("dialog-storage")
 lazy val dialogStorageSlick = project in file("dialog-storage-slick") dependsOn dialogStorage
 
-enablePlugins(Publishing)
+publishMavenStyle := true
+
+bintrayOrganization := Some("dialog")
+
+enablePlugins(GitVersioning)
+
+// enablePlugins(Publishing)
