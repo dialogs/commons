@@ -12,11 +12,32 @@ lazy val defaultSettings = Seq(
   publishMavenStyle := true
 )
 
-lazy val dialogUtil = project in file("dialog-util")
-lazy val dialogConcurrent = project in file("dialog-concurrent") dependsOn dialogUtil
-lazy val dialogCatsSlick = project in file("dialog-cats-slick")
-lazy val dialogStorage = project in file("dialog-storage")
-lazy val dialogStorageSlick = project in file("dialog-storage-slick") dependsOn dialogStorage
+lazy val dialogUtil = (project in file("dialog-util")).settings(Seq(
+      libraryDependencies ++= Dependencies.root
+    )) 
+lazy val dialogConcurrent = (project in file("dialog-concurrent") dependsOn dialogUtil).settings(Seq(
+      libraryDependencies ++= Dependencies.root
+    )) 
+lazy val dialogCatsSlick = (project in file("dialog-cats-slick")).settings(Seq(
+      libraryDependencies ++= Dependencies.root
+    )) 
+lazy val dialogStorage = (project in file("dialog-storage")).settings(Seq(
+      libraryDependencies ++= Dependencies.root
+    )) 
+lazy val dialogStorageSlick = (project in file("dialog-storage-slick") dependsOn dialogStorage).settings(Seq(
+      libraryDependencies ++= Dependencies.root
+    )) 
+
+lazy val root = project.in(file("."))
+  .settings(
+    name := "commons"
+  ).aggregate(
+  	dialogUtil, 
+  	dialogConcurrent, 
+  	dialogCatsSlick, 
+  	dialogStorage, 
+  	dialogStorageSlick
+  )
 
 publishMavenStyle := true
 

@@ -19,4 +19,8 @@ object Dependencies {
   val slickPg = "com.github.tminglei" %% "slick-pg" % V.SlickPg % "provided"
 
   val cats = "org.typelevel" %% "cats-core" % V.Cats % "provided"
+
+  val root = Seq(
+    akkaActor, scalatest, slick, slickPg, cats
+  )
 }
