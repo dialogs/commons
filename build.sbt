@@ -10,18 +10,20 @@ lazy val defaultSettings = Seq(
   licenses := Seq("Apache-2.0" -> url("https://github.com/dialogs/api-schema/blob/master/LICENSE")),
   resolvers += Resolver.sonatypeRepo("public"),
   publishMavenStyle := true,
-  libraryDependencies ++= Dependencies.root
+  libraryDependencies ++= Dependencies.root,
+  bintrayOrganization := Some("dialog")
 )
 
-lazy val dialogUtil = (project in file("dialog-util")).settings(defaultSettings) 
-lazy val dialogConcurrent = (project in file("dialog-concurrent") dependsOn dialogUtil).settings(defaultSettings) 
-lazy val dialogCatsSlick = (project in file("dialog-cats-slick")).settings(defaultSettings) 
-lazy val dialogStorage = (project in file("dialog-storage")).settings(defaultSettings) 
-lazy val dialogStorageSlick = (project in file("dialog-storage-slick") dependsOn dialogStorage).settings(defaultSettings) 
+lazy val dialogUtil = (project in file("dialog-util")).settings(defaultSettings ++ Seq(name := "dialog-util")) 
+lazy val dialogConcurrent = (project in file("dialog-concurrent") dependsOn dialogUtil).settings(defaultSettings ++ Seq(name := "dialog-concurrent")) 
+lazy val dialogCatsSlick = (project in file("dialog-cats-slick")).settings(defaultSettings ++ Seq(name := "dialog-cats-slick")) 
+lazy val dialogStorage = (project in file("dialog-storage")).settings(defaultSettings ++ Seq(name := "dialog-storage")) 
+lazy val dialogStorageSlick = (project in file("dialog-storage-slick") dependsOn dialogStorage).settings(defaultSettings ++ Seq(name := "dialog-storage-slick")) 
 
 lazy val root = project.in(file("."))
   .settings(
-    name := "commons"
+    name := "commons",
+    skip in publish := true
   ).aggregate(
   	dialogUtil, 
   	dialogConcurrent, 
@@ -29,8 +31,6 @@ lazy val root = project.in(file("."))
   	dialogStorage, 
   	dialogStorageSlick
   )
-
-publishMavenStyle := true
 
 bintrayOrganization := Some("dialog")
 
